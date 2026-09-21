@@ -1,1 +1,1 @@
-# Blogs_panel
+# Blogs Panel
