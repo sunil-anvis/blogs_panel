@@ -176,7 +176,7 @@
             .catch(err => console.error('CKEditor #' + id, err));
     }
 
-    const minBar  = ['bold', 'italic', 'link', '|', 'undo', 'redo'];
+    const minBar  = ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo'];
     const fullBar = ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'];
 
     initEditor('title',    minBar);
