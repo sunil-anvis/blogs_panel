@@ -45,7 +45,7 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label class="form-label" for="title">Title <span>*</span></label>
-                        <textarea id="title" name="title" class="form-control" required>{{ old('title', $blog->title ?? '') }}</textarea>
+                        <textarea id="title" name="title" class="form-control">{{ old('title', $blog->title ?? '') }}</textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="subtitle">Subtitle</label>

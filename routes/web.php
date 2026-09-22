@@ -11,6 +11,7 @@ Route::get('/', fn() => redirect()->route('admin.login'));
 // Auth routes (guests only)
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+    Route::get('/login', fn() => redirect()->route('admin.login'))->name('login');
     Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
 });
 
