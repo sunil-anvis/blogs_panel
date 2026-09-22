@@ -97,7 +97,7 @@ class BlogController extends Controller
 
             if ($request->hasFile('image')) {
                 $path = $request->file('image')->store('blogs', 'public');
-                $validated['image'] = 'public_storage/' . $path;
+                $validated['image'] = 'public_storage/' . $path; // e.g. "public_storage/blogs/filename.jpg"
             }
 
             $blog = Blog::create($validated);
@@ -190,18 +190,14 @@ class BlogController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                // Delete old image if exists
+                // Delete old image from storage (strip 'public_storage/' prefix to get disk path)
                 if ($blog->image && str_starts_with($blog->image, 'public_storage/')) {
-                    $oldPath = str_replace('public_storage/', '', $blog->image);
-                    Storage::disk('public')->delete($oldPath);
-                } elseif ($blog->image && str_starts_with($blog->image, 'storage/')) {
-                    // Handle legacy paths stored without 'public/' prefix
-                    $oldPath = str_replace('storage/', '', $blog->image);
-                    Storage::disk('public')->delete($oldPath);
+                    $diskPath = str_replace('public_storage/', '', $blog->image);
+                    Storage::disk('public')->delete($diskPath);
                 }
 
                 $path = $request->file('image')->store('blogs', 'public');
-                $validated['image'] = 'public_storage/' . $path;
+                $validated['image'] = 'public_storage/' . $path; // e.g. "public_storage/blogs/filename.jpg"
             }
 
             $blog->update($validated);
