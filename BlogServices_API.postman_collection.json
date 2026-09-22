@@ -1,0 +1,848 @@
+{
+  "info": {
+    "_postman_id": "blogs-panel-api-collection",
+    "name": "BlogServices API",
+    "description": "Complete API collection for BlogServices Panel. Includes Auth, Users, Roles, Permissions, Companies, and Blogs endpoints.\n\n**Base URL:** `{{base_url}}`\n\n**Authentication:** Most endpoints require a Bearer token. Login first and copy the `token` from the response into the `auth_token` collection variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
+    { "key": "auth_token", "value": "", "type": "string" },
+    { "key": "api_key", "value": "YOUR_API_KEY_HERE", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] },
+            "description": "Register a new user. Returns a token on success."
+          },
+          "response": [
+            {
+              "name": "201 – Success",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"User registered successfully\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"created_at\": \"2025-09-22T10:00:00.000000Z\"\n  },\n  \"token\": \"aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789aBcDeFgHiJkLmNoPqRsTuV\"\n}"
+            },
+            {
+              "name": "422 – Validation Error",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Validation error\",\n  \"errors\": {\n    \"email\": [\"The email has already been taken.\"],\n    \"password\": [\"The password must be at least 8 characters.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('auth_token', json.token);",
+                  "  console.log('Token saved:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] },
+            "description": "Login and receive a Bearer token. The test script automatically saves the token to the `auth_token` collection variable."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Logged in successfully\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\"\n  },\n  \"token\": \"aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789aBcDeFgHiJkLmNoPqRsTuV\"\n}"
+            },
+            {
+              "name": "401 – Invalid Credentials",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"The provided credentials are incorrect.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"] },
+            "description": "Revoke the current Bearer token."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Logged out successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Authenticated User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/user", "host": ["{{base_url}}"], "path": ["user"] },
+            "description": "Fetch the currently authenticated user with their role and permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": {\n      \"id\": 1,\n      \"name\": \"Admin\",\n      \"permissions\": [\n        { \"id\": 1, \"name\": \"blogs.create\" },\n        { \"id\": 2, \"name\": \"blogs.delete\" }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "👥 Users",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] },
+            "description": "Returns all users with their assigned roles and permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"role\": { \"id\": 1, \"name\": \"Admin\" }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"securepassword\",\n  \"role_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] },
+            "description": "Create a new user. Optionally assign a role by passing `role_id`."
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane@example.com\",\n    \"role\": { \"id\": 1, \"name\": \"Admin\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] },
+            "description": "Fetch a single user by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": { \"id\": 1, \"name\": \"Admin\", \"permissions\": [] }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"email\": \"john.updated@example.com\",\n  \"password\": \"newpassword123\",\n  \"role_id\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] },
+            "description": "Update user fields. All fields are optional (use `sometimes` validation)."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"User updated successfully\",\n  \"data\": { \"id\": 1, \"name\": \"John Updated\", \"email\": \"john.updated@example.com\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] },
+            "description": "Delete a user by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"User deleted successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/users/1/roles", "host": ["{{base_url}}"], "path": ["users", "1", "roles"] },
+            "description": "Assign a role to a specific user. Replaces the existing role."
+          },
+          "response": [
+            {
+              "name": "200 – Role Assigned",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Role assigned successfully\",\n  \"data\": { \"id\": 1, \"name\": \"John Doe\", \"role\": { \"id\": 2, \"name\": \"Editor\" } }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove Role from User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/users/1/roles", "host": ["{{base_url}}"], "path": ["users", "1", "roles"] },
+            "description": "Remove the role from a user (sets role_id to null)."
+          },
+          "response": [
+            {
+              "name": "200 – Role Removed",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Role removed successfully\",\n  \"data\": { \"id\": 1, \"name\": \"John Doe\", \"role\": null }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Roles",
+      "item": [
+        {
+          "name": "List All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}}"], "path": ["roles"] },
+            "description": "Returns all roles with their associated permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Admin\",\n      \"permissions\": [\n        { \"id\": 1, \"name\": \"blogs.create\" },\n        { \"id\": 2, \"name\": \"blogs.delete\" }\n      ]\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Editor\",\n      \"permissions\": [\n        { \"id\": 1, \"name\": \"blogs.create\" }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Editor\",\n  \"permissions\": [1, 2, 3]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}}"], "path": ["roles"] },
+            "description": "Create a new role and optionally sync permissions by passing an array of permission IDs."
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Role created successfully\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Editor\",\n    \"permissions\": [\n      { \"id\": 1, \"name\": \"blogs.create\" },\n      { \"id\": 2, \"name\": \"blogs.delete\" },\n      { \"id\": 3, \"name\": \"companies.view\" }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/roles/1", "host": ["{{base_url}}"], "path": ["roles", "1"] },
+            "description": "Fetch a single role by ID, including its permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Admin\",\n    \"permissions\": [\n      { \"id\": 1, \"name\": \"blogs.create\" }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"permissions\": [1, 2, 3, 4]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/roles/1", "host": ["{{base_url}}"], "path": ["roles", "1"] },
+            "description": "Update role name and/or sync permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Role updated successfully\",\n  \"data\": { \"id\": 1, \"name\": \"Super Admin\", \"permissions\": [] }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/roles/1", "host": ["{{base_url}}"], "path": ["roles", "1"] },
+            "description": "Delete a role by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Role deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔑 Permissions",
+      "item": [
+        {
+          "name": "List All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}}"], "path": ["permissions"] },
+            "description": "Returns all available permissions."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": [\n    { \"id\": 1, \"name\": \"blogs.create\" },\n    { \"id\": 2, \"name\": \"blogs.delete\" },\n    { \"id\": 3, \"name\": \"companies.view\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"blogs.publish\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}}"], "path": ["permissions"] },
+            "description": "Create a new permission. Name must be unique."
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Permission created successfully\",\n  \"data\": { \"id\": 4, \"name\": \"blogs.publish\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/permissions/1", "host": ["{{base_url}}"], "path": ["permissions", "1"] },
+            "description": "Fetch a single permission by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": { \"id\": 1, \"name\": \"blogs.create\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"blogs.write\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/permissions/1", "host": ["{{base_url}}"], "path": ["permissions", "1"] },
+            "description": "Update a permission's name. Must be unique."
+          },
+          "response": [
+            {
+              "name": "200 – Updated",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Permission updated successfully\",\n  \"data\": { \"id\": 1, \"name\": \"blogs.write\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/permissions/1", "host": ["{{base_url}}"], "path": ["permissions", "1"] },
+            "description": "Delete a permission by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Permission deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🏢 Companies",
+      "item": [
+        {
+          "name": "List All Companies",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/companies", "host": ["{{base_url}}"], "path": ["companies"] },
+            "description": "Returns all companies with blog counts."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Company fetched successfully\",\n  \"data\": [\n    { \"id\": 1, \"name\": \"Kintree\", \"blogs_count\": 5 },\n    { \"id\": 2, \"name\": \"Nutriiya\", \"blogs_count\": 3 }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/companies", "host": ["{{base_url}}"], "path": ["companies"] },
+            "description": "Create a new company."
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Company created successfully\",\n  \"data\": { \"id\": 3, \"name\": \"Acme Corp\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Company",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/companies/1", "host": ["{{base_url}}"], "path": ["companies", "1"] },
+            "description": "Fetch a single company by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Company fetched successfully\",\n  \"data\": { \"id\": 1, \"name\": \"Kintree\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Company",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kintree Pvt Ltd\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/companies/1", "host": ["{{base_url}}"], "path": ["companies", "1"] },
+            "description": "Update a company's name."
+          },
+          "response": [
+            {
+              "name": "200 – Updated",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Company updated successfully\",\n  \"data\": { \"id\": 1, \"name\": \"Kintree Pvt Ltd\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Company",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/companies/1", "host": ["{{base_url}}"], "path": ["companies", "1"] },
+            "description": "Delete a company by ID."
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Company deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📝 Blogs",
+      "item": [
+        {
+          "name": "List All Blogs (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-KEY", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/public/blogs",
+              "host": ["{{base_url}}"],
+              "path": ["public", "blogs"]
+            },
+            "description": "**Public endpoint** – requires only an `X-API-KEY` header (no Bearer token). Returns only **active and published** blogs."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"<p>Getting Started with Laravel</p>\",\n      \"subtitle\": \"<p>A beginner's guide</p>\",\n      \"is_active\": true,\n      \"publish_at\": \"2025-09-01T00:00:00.000000Z\",\n      \"company\": { \"id\": 1, \"name\": \"Kintree\" }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List All Blogs (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/blogs", "host": ["{{base_url}}"], "path": ["blogs"] },
+            "description": "**Authenticated endpoint** – returns ALL blogs (active, inactive, scheduled)."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"company_id\": 1,\n      \"title\": \"<p>Getting Started with Laravel</p>\",\n      \"subtitle\": \"<p>A beginner's guide</p>\",\n      \"content\": { \"html\": \"<p>Full article content here...</p>\" },\n      \"faqs\": { \"html\": \"<p>FAQ content here...</p>\" },\n      \"image\": \"public/storage/blogs/cover.jpg\",\n      \"is_active\": true,\n      \"publish_at\": \"2025-09-01T00:00:00.000000Z\",\n      \"created_at\": \"2025-08-25T10:00:00.000000Z\",\n      \"company\": { \"id\": 1, \"name\": \"Kintree\" }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Blog",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "company_id", "value": "1", "type": "text", "description": "Required. ID of the company." },
+                { "key": "title", "value": "<p>My New Blog Post</p>", "type": "text", "description": "Required. Can contain HTML." },
+                { "key": "subtitle", "value": "<p>A short subtitle</p>", "type": "text", "description": "Optional." },
+                { "key": "content", "value": "<p>This is the full <strong>HTML</strong> content of the blog.</p>", "type": "text", "description": "Optional. HTML content." },
+                { "key": "faqs", "value": "<p><strong>Q:</strong> What is this? <strong>A:</strong> A blog post.</p>", "type": "text", "description": "Optional. FAQ HTML content." },
+                { "key": "is_active", "value": "1", "type": "text", "description": "Optional. 1 = active, 0 = inactive." },
+                { "key": "publish_at", "value": "2025-10-01T09:00:00", "type": "text", "description": "Optional. Schedule publish date (ISO 8601)." },
+                { "key": "image", "value": "", "type": "file", "description": "Optional. Image file (max 2MB)." }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/blogs", "host": ["{{base_url}}"], "path": ["blogs"] },
+            "description": "Create a new blog post. Uses **form-data** (multipart) to support image upload.\n\n> **Note:** `title`, `subtitle`, `content`, `faqs` store raw HTML strings which are wrapped automatically in `{\"html\": \"...\"}` by the backend."
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog created successfully\",\n  \"data\": {\n    \"id\": 5,\n    \"company_id\": 1,\n    \"title\": \"<p>My New Blog Post</p>\",\n    \"subtitle\": \"<p>A short subtitle</p>\",\n    \"content\": { \"html\": \"<p>This is the full HTML content of the blog.</p>\" },\n    \"faqs\": { \"html\": \"<p>FAQ content here...</p>\" },\n    \"image\": \"public/storage/blogs/abc123.jpg\",\n    \"is_active\": true,\n    \"publish_at\": \"2025-10-01T09:00:00.000000Z\",\n    \"company\": { \"id\": 1, \"name\": \"Kintree\" }\n  }\n}"
+            },
+            {
+              "name": "422 – Validation Error",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": {\n    \"company_id\": [\"The selected company id is invalid.\"],\n    \"title\": [\"The title field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Blog",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/blogs/1", "host": ["{{base_url}}"], "path": ["blogs", "1"] },
+            "description": "Fetch a single blog by ID with its company."
+          },
+          "response": [
+            {
+              "name": "200 – Success",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog fetched successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"<p>Getting Started with Laravel</p>\",\n    \"content\": { \"html\": \"<p>Article body...</p>\" },\n    \"is_active\": true,\n    \"company\": { \"id\": 1, \"name\": \"Kintree\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Blog",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "_method", "value": "PUT", "type": "text", "description": "Required to spoof PUT method for multipart form." },
+                { "key": "company_id", "value": "1", "type": "text", "description": "Optional." },
+                { "key": "title", "value": "<p>Updated Blog Title</p>", "type": "text", "description": "Optional." },
+                { "key": "subtitle", "value": "<p>Updated subtitle</p>", "type": "text", "description": "Optional." },
+                { "key": "content", "value": "<p>Updated HTML content.</p>", "type": "text", "description": "Optional." },
+                { "key": "faqs", "value": "<p>Updated FAQs.</p>", "type": "text", "description": "Optional." },
+                { "key": "is_active", "value": "1", "type": "text", "description": "Optional. 1 or 0." },
+                { "key": "publish_at", "value": "2025-11-01T09:00:00", "type": "text", "description": "Optional." },
+                { "key": "image", "value": "", "type": "file", "description": "Optional. Upload new image to replace existing." }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/blogs/1", "host": ["{{base_url}}"], "path": ["blogs", "1"] },
+            "description": "Update an existing blog. Uses **form-data** with `_method=PUT` to support file upload.\n\n> ⚠️ All fields are optional. Only pass what you want to change."
+          },
+          "response": [
+            {
+              "name": "200 – Updated",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"<p>Updated Blog Title</p>\",\n    \"content\": { \"html\": \"<p>Updated HTML content.</p>\" },\n    \"is_active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Blog",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/blogs/1", "host": ["{{base_url}}"], "path": ["blogs", "1"] },
+            "description": "Delete a blog by ID. Also removes the associated image from storage."
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blog deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
