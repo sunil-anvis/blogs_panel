@@ -28,6 +28,11 @@ class Blog extends Model
     ];
 
     /**
+     * Hide the raw image path from the API response.
+     */
+    protected $hidden = ['image'];
+
+    /**
      * Append image_url to every serialized response.
      */
     protected $appends = ['image_url'];
@@ -49,10 +54,8 @@ class Blog extends Model
         }
 
         // DB stores: "public_storage/blogs/filename.jpg"
-        // Public URL: "APP_URL/storage/blogs/filename.jpg"
-        $relativePath = str_replace('public_storage/', 'storage/', $this->image);
-
-        return rtrim(config('app.url'), '/') . '/' . $relativePath;
+        // API returns: "APP_URL/public_storage/blogs/filename.jpg"
+        return rtrim(config('app.url'), '/') . '/' . ltrim($this->image, '/');
     }
 
     public function company()

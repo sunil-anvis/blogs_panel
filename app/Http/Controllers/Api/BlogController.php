@@ -19,7 +19,11 @@ class BlogController extends Controller
                 $query->where('is_active', true)
                       ->where('publish_at', '<=', now());
                 $blogs = $query->get();
-                return response()->json(['success' => true, 'message' => 'Blog fetched successfully', 'data' => $blogs], 200);
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Blog fetched successfully', 
+                    'data' => $blogs
+                ], 200);
             }
 
             // ── Authenticated API: return all ──
