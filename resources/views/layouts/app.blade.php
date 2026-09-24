@@ -107,7 +107,8 @@
         /* ── Topbar (Border-free & Floating Style) ── */
         .topbar {
             height: 70px; 
-            background: transparent;
+            background: rgba(244, 246, 249, 0.9);
+            backdrop-filter: blur(10px);
             display: flex; 
             align-items: center; 
             justify-content: space-between;
@@ -116,7 +117,11 @@
             top: 0; 
             z-index: 50;
         }
+        .topbar-left { display: flex; align-items: center; gap: 16px; }
         .topbar-title { font-size: 20px; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; }
+        .menu-toggle {
+            display: none; background: transparent; border: none; font-size: 24px; color: var(--text-main); cursor: pointer;
+        }
         .topbar-right { display: flex; align-items: center; gap: 16px; }
         .date-badge { 
             font-size: 13px; font-weight: 500; color: var(--text-muted); 
@@ -284,16 +289,21 @@
         .mt-2 { margin-top: 8px; }
         .d-flex { display: flex; }
         .gap-2 { gap: 12px; }
-        .ms-auto { margin-left: auto; }
-        .align-center { align-items: center; }
-
+        .form-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; max-width: 1200px; margin: 0 auto; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 960px) { .form-row { grid-template-columns: 1fr; } }
+        @media (max-width: 960px) { 
+            .form-row { grid-template-columns: 1fr; } 
+            .form-layout { grid-template-columns: 1fr; }
+        }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar.show { transform: translateX(0); }
             .main { margin-left: 0; }
             .stats { grid-template-columns: 1fr; }
             .topbar { padding: 0 16px; }
+            .topbar-right .date-badge { display: none; }
+            .topbar-right .user-info { display: none; }
+            .menu-toggle { display: block; }
             .content { padding: 10px 16px 16px; }
         }
     </style>
@@ -348,11 +358,14 @@
     {{-- Main --}}
     <div class="main">
         <header class="topbar">
-            <div class="topbar-title">@yield('topbar-title', 'Dashboard')</div>
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <div class="topbar-title">@yield('topbar-title', 'Dashboard')</div>
+            </div>
             <div class="topbar-right">
                 <span class="date-badge">{{ now()->format('D, d M Y') }}</span>
                 <div style="display:flex;align-items:center;gap:12px">
-                    <div style="text-align:right">
+                    <div style="text-align:right" class="user-info">
                         <div style="font-size:13px;font-weight:700;color:var(--text-main)">{{ auth()->user()->name ?? 'Admin' }}</div>
                         <div style="font-size:11px;color:var(--text-muted);font-weight:500;">Administrator</div>
                     </div>
@@ -376,5 +389,10 @@
     </div>
 
     @stack('scripts')
+    <script>
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        });
+    </script>
 </body>
 </html>

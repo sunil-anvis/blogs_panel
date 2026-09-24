@@ -112,7 +112,7 @@
                     <th>Blog</th>
                     <th>Company</th>
                     <th>Status</th>
-                    <th>Publish Date</th>
+                    <!-- <th>Publish Date</th> -->
                     <th>Created</th>
                     <th>Actions</th>
                 </tr>
@@ -144,24 +144,27 @@
                         </span>
                     </td>
                     <td>
-                        @php $isPublished = $blog->is_active && $blog->publish_at && $blog->publish_at->lte(now()); @endphp
-                        @php $isScheduled = $blog->is_active && $blog->publish_at && $blog->publish_at->gt(now()); @endphp
-                        @if($isPublished)
-                            <span class="badge badge-success">Published</span>
-                        @elseif($isScheduled)
-                            <span class="badge badge-purple">Scheduled</span>
-                        @elseif($blog->is_active)
-                            <span class="badge badge-purple">Active</span>
-                        @else
-                            <span class="badge badge-danger">Inactive</span>
-                        @endif
+                        <div class="toggle-wrap" style="transform: scale(0.85); transform-origin: left center;">
+                            <label class="toggle">
+                                <input type="checkbox" onchange="quickUpdate({{ $blog->id }}, 'is_active', this.checked ? 1 : 0)" {{ $blog->is_active ? 'checked' : '' }}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label status-label" id="status-label-{{ $blog->id }}" style="min-width: 65px; font-weight: 600; font-size: 13px; color: {{ $blog->is_active ? 'var(--success)' : 'var(--text-muted)' }};">
+                                {{ $blog->is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
                     </td>
-                    <td class="text-muted text-sm">
-                        {{ $blog->publish_at ? $blog->publish_at->format('d M Y, H:i') : '—' }}
-                    </td>
+                    <!-- <td>
+                        <button type="button" class="btn btn-primary" onclick="openPublishModal({{ $blog->id }}, '{{ $blog->publish_at ? $blog->publish_at->format('Y-m-d') : '' }}')" style="font-size: 13px; font-weight: 500; border: 1px solid var(--border); padding: 6px 12px;">
+                            Publish
+                        </button>
+                    </td> -->
                     <td class="text-muted text-sm">{{ $blog->created_at->format('d M Y') }}</td>
                     <td>
                         <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" onclick="openPublishModal({{ $blog->id }}, '{{ $blog->publish_at ? $blog->publish_at->format('Y-m-d') : '' }}')" style="font-size: 13px; font-weight: 500; border: 1px solid var(--border); padding: 6px 12px;">
+                                Publish
+                            </button>
                             <a href="{{ route('admin.blogs.edit', $blog) }}" class="btn btn-ghost btn-sm">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 Edit
@@ -226,6 +229,27 @@
         </div>
     </div>
     @endif
+</div>
+
+{{-- Publish Date Modal --}}
+<div id="publish-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-content card" style="width: 100%; max-width: 400px; margin: 20px; box-shadow: var(--shadow-lg);">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 16px 24px;">
+            <h2 style="font-size:16px;">Set Publish Date</h2>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Select Date</label>
+                <input type="date" id="modal-publish-date" class="form-control">
+                <p class="text-muted text-sm mt-2">Cannot select dates older than 1 month or more than 2 months ahead.</p>
+            </div>
+            <input type="hidden" id="modal-blog-id">
+        </div>
+        <div style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="button" class="btn btn-ghost" onclick="closePublishModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="savePublishDate()">Save</button>
+        </div>
+    </div>
 </div>
 
 @push('styles')
@@ -306,5 +330,92 @@
         cursor: not-allowed;
     }
 </style>
+
+<script>
+    // Validation limits
+    function getValidationLimits() {
+        const now = new Date();
+        
+        const minDate = new Date();
+        minDate.setMonth(now.getMonth() - 1);
+        
+        const maxDate = new Date();
+        maxDate.setMonth(now.getMonth() + 2);
+
+        return {
+            min: minDate.toISOString().slice(0, 10),
+            max: maxDate.toISOString().slice(0, 10)
+        };
+    }
+
+    // Modal functions
+    function openPublishModal(blogId, currentValue) {
+        const modal = document.getElementById('publish-modal');
+        const input = document.getElementById('modal-publish-date');
+        const limits = getValidationLimits();
+        
+        input.min = limits.min;
+        input.max = limits.max;
+        
+        document.getElementById('modal-blog-id').value = blogId;
+        input.value = currentValue;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closePublishModal() {
+        document.getElementById('publish-modal').style.display = 'none';
+    }
+
+    function savePublishDate() {
+        const blogId = document.getElementById('modal-blog-id').value;
+        const value = document.getElementById('modal-publish-date').value;
+        const input = document.getElementById('modal-publish-date');
+        
+        // Manual validation check
+        if(value) {
+            if(value < input.min) return alert("Date cannot be older than 1 month.");
+            if(value > input.max) return alert("Date cannot be more than 2 months in the future.");
+        }
+        
+        quickUpdate(blogId, 'publish_at', value);
+        closePublishModal();
+    }
+
+    function quickUpdate(blogId, field, value) {
+        let payload = {};
+        payload[field] = value;
+        payload['_method'] = 'PATCH';
+
+        fetch(`/admin/blogs/${blogId}/quick-update`, {
+            method: 'POST', // using POST with _method=PATCH
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (field === 'is_active') {
+                    const label = document.getElementById(`status-label-${blogId}`);
+                    label.textContent = value ? 'Active' : 'Inactive';
+                    label.style.color = value ? 'var(--success)' : 'var(--text-muted)';
+                } else if (field === 'publish_at') {
+                    window.location.reload(); // Reload to show formatted date
+                }
+            } else {
+                alert('Error updating blog.');
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Something went wrong.');
+            window.location.reload();
+        });
+    }
+</script>
 @endpush
 @endsection

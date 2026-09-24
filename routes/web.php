@@ -22,6 +22,7 @@ Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admi
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('companies', CompanyController::class)->except(['show']);
+    Route::patch('blogs/{blog}/quick-update', [BlogController::class, 'quickUpdate'])->name('blogs.quick-update');
     Route::resource('blogs', BlogController::class)->except(['show']);
 });
 

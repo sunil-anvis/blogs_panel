@@ -18,6 +18,15 @@ class BlogController extends Controller
             if ($request->is('api/public/blogs')) {
                 $query->where('is_active', true)
                       ->where('publish_at', '<=', now());
+
+                // Filter by company API key if provided
+                $companyApiKey = $request->header('Company-Api-Key') ?? $request->query('company_api_key');
+                if ($companyApiKey) {
+                    $query->whereHas('company', function ($q) use ($companyApiKey) {
+                        $q->where('api_key', $companyApiKey);
+                    });
+                }
+
                 $blogs = $query->get();
                 return response()->json([
                     'success' => true, 
@@ -235,6 +244,34 @@ class BlogController extends Controller
             }
             return back()->with('error', 'Failed to update blog: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function quickUpdate(Request $request, Blog $blog)
+    {
+        $validated = $request->validate([
+            'is_active'  => 'nullable|boolean',
+            'publish_at' => 'nullable|date',
+        ]);
+
+        if ($request->has('is_active')) {
+            $blog->is_active = (bool) $request->is_active;
+        }
+
+        if ($request->has('publish_at')) {
+            $blog->publish_at = $request->publish_at;
+        }
+
+        $blog->save();
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Blog updated successfully',
+                'data'    => $blog,
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Blog updated successfully!']);
     }
 
     public function destroy(Request $request, Blog $blog)

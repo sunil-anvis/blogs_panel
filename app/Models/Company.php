@@ -9,7 +9,18 @@ class Company extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'api_key'];
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($company) {
+            if (empty($company->api_key)) {
+                $company->api_key = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+    }
 
     public function blogs()
     {
