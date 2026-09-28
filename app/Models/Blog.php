@@ -24,6 +24,7 @@ class Blog extends Model
         'publish_at',
         'meta_title',
         'meta_description',
+        'canonical_url',
     ];
 
     protected $casts = [

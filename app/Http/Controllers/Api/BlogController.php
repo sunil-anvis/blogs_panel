@@ -116,6 +116,7 @@ class BlogController extends Controller
                 'publish_at'       => 'nullable|date',
                 'meta_title'       => 'nullable|string|max:160',
                 'meta_description' => 'nullable|string',
+                'canonical_url'    => 'nullable|string',
             ]);
 
             // Wrap string HTML in an associative array to satisfy JSON column constraints
@@ -215,6 +216,7 @@ class BlogController extends Controller
                 'publish_at'       => 'nullable|date',
                 'meta_title'       => 'nullable|string|max:160',
                 'meta_description' => 'nullable|string',
+                'canonical_url'    => 'nullable|string',
             ]);
 
             // Wrap string HTML in an associative array to satisfy JSON column constraints

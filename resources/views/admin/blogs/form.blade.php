@@ -86,6 +86,10 @@
                         <label class="form-label" for="meta_description">Meta Description</label>
                         <textarea id="meta_description" name="meta_description" class="form-control" rows="3" style="border: 1px solid #ced4da; resize:vertical;">{{ old('meta_description', $blog->meta_description ?? '') }}</textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="canonical_url">Canonical URL</label>
+                        <input type="url" id="canonical_url" name="canonical_url" class="form-control" style="border: 1px solid #ced4da;" placeholder="https://example.com/canonical-page" value="{{ old('canonical_url', $blog->canonical_url ?? '') }}">
+                    </div>
                     <div class="form-group" style="margin-bottom:0">
                         <label class="form-label" for="schema_markup">Schema Markup</label>
                         <textarea id="schema_markup" name="schema_markup" class="form-control" rows="8" style="border: 1px solid #ced4da; resize:vertical;font-family:monospace;font-size:13px;line-height:1.6;" spellcheck="false">{{ old('schema_markup', is_array($blog->schema_markup ?? null) ? ($blog->schema_markup['raw'] ?? '') : ($blog->schema_markup ?? '')) }}</textarea>
@@ -165,7 +169,7 @@
             </div>
 
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary" style="flex:1">{{ isset($blog) ? 'Save Changes' : 'Create Blog Post' }}</button>
+                <button type="submit" class="btn btn-primary" style="flex:1">{{ isset($blog) ? 'Save Changes' : 'Publish Blog' }}</button>
                 <a href="{{ route('admin.blogs.index') }}" class="btn btn-ghost">Cancel</a>
             </div>
 
