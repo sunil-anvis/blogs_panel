@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Blog extends Model
 {
@@ -12,19 +13,25 @@ class Blog extends Model
     protected $fillable = [
         'company_id',
         'title',
-        'subtitle',
+        'slug',
+        'subtitle',          // kept as DB column name; labeled "Excerpt" in the UI
         'image',
+        'alt_text',
         'content',
         'faqs',
+        'schema_markup',
         'is_active',
         'publish_at',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [
-        'content'    => 'array',
-        'faqs'       => 'array',
-        'is_active'  => 'boolean',
-        'publish_at' => 'datetime',
+        'content'        => 'array',
+        'faqs'           => 'array',
+        'schema_markup'  => 'array',
+        'is_active'      => 'boolean',
+        'publish_at'     => 'datetime',
     ];
 
     /**
@@ -38,9 +45,52 @@ class Blog extends Model
     protected $appends = ['image_url'];
 
     /**
+     * Auto-generate a unique slug from the title on create.
+     * On update, only regenerate if the slug has been explicitly cleared.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($blog) {
+            if (empty($blog->slug) && $blog->title) {
+                $blog->slug = static::generateUniqueSlug(
+                    strip_tags($blog->title)
+                );
+            }
+        });
+
+        static::updating(function ($blog) {
+            if (empty($blog->slug) && $blog->title) {
+                $blog->slug = static::generateUniqueSlug(
+                    strip_tags($blog->title),
+                    $blog->id
+                );
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $text, ?int $excludeId = null): string
+    {
+        $base = Str::slug(strip_tags($text));
+        $slug = $base;
+        $i    = 1;
+
+        while (
+            static::where('slug', $slug)
+                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
+    }
+
+    /**
      * Returns the full public URL for the blog image.
-     * The `image` column stores only the relative path e.g. "blogs/abc.jpg".
-     * APP_URL in .env must be set to the server base URL.
+     * DB stores: "public_storage/blogs/filename.jpg"
+     * API returns: "APP_URL/storage/blogs/filename.jpg"
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -48,14 +98,13 @@ class Blog extends Model
             return null;
         }
 
-        // If already a full URL, return as-is
         if (str_starts_with($this->image, 'http')) {
             return $this->image;
         }
 
-        // DB stores: "public_storage/blogs/filename.jpg"
-        // API returns: "APP_URL/public_storage/blogs/filename.jpg"
-        return rtrim(config('app.url'), '/') . '/' . ltrim($this->image, '/');
+        // Strip prefix → /storage/blogs/filename.jpg
+        $diskPath = ltrim(str_replace('public_storage/', '', $this->image), '/');
+        return rtrim(config('app.url'), '/') . '/storage/' . $diskPath;
     }
 
     public function company()
@@ -63,4 +112,3 @@ class Blog extends Model
         return $this->belongsTo(Company::class);
     }
 }
-

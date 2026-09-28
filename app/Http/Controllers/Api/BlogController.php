@@ -104,20 +104,32 @@ class BlogController extends Controller
     {
         try {
             $validated = $request->validate([
-                'company_id' => 'required|exists:companies,id',
-                'title'      => 'required|string',
-                'subtitle'   => 'nullable|string',
-                'image'      => 'nullable|image|max:2048',
-                'content'    => 'nullable|string',
-                'faqs'       => 'nullable|string',
-                'is_active'  => 'nullable|boolean',
-                'publish_at' => 'nullable|date',
+                'company_id'       => 'required|exists:companies,id',
+                'title'            => 'required|string',
+                'subtitle'         => 'nullable|string',
+                'image'            => 'nullable|image|max:2048',
+                'alt_text'         => 'nullable|string|max:255',
+                'content'          => 'nullable|string',
+                'faqs'             => 'nullable|string',
+                'schema_markup'    => 'nullable|string',
+                'is_active'        => 'nullable|boolean',
+                'publish_at'       => 'nullable|date',
+                'meta_title'       => 'nullable|string|max:160',
+                'meta_description' => 'nullable|string',
             ]);
 
             // Wrap string HTML in an associative array to satisfy JSON column constraints
             $validated['content']   = $validated['content'] ? ['html' => $validated['content']] : null;
             $validated['faqs']      = $validated['faqs']    ? ['html' => $validated['faqs']]    : null;
             $validated['is_active'] = $request->has('is_active') ? (bool) $request->is_active : false;
+
+            // Decode schema_markup JSON string into array (stored as JSON column)
+            if (!empty($validated['schema_markup'])) {
+                $decoded = json_decode($validated['schema_markup'], true);
+                $validated['schema_markup'] = is_array($decoded) ? $decoded : ['raw' => $validated['schema_markup']];
+            } else {
+                $validated['schema_markup'] = null;
+            }
 
             if ($request->hasFile('image')) {
                 $path = $request->file('image')->store('blogs', 'public');
@@ -191,14 +203,18 @@ class BlogController extends Controller
     {
         try {
             $validated = $request->validate([
-                'company_id' => 'sometimes|exists:companies,id',
-                'title'      => 'sometimes|required|string',
-                'subtitle'   => 'nullable|string',
-                'image'      => 'nullable|image|max:2048',
-                'content'    => 'nullable|string',
-                'faqs'       => 'nullable|string',
-                'is_active'  => 'nullable|boolean',
-                'publish_at' => 'nullable|date',
+                'company_id'       => 'sometimes|exists:companies,id',
+                'title'            => 'sometimes|required|string',
+                'subtitle'         => 'nullable|string',
+                'image'            => 'nullable|image|max:2048',
+                'alt_text'         => 'nullable|string|max:255',
+                'content'          => 'nullable|string',
+                'faqs'             => 'nullable|string',
+                'schema_markup'    => 'nullable|string',
+                'is_active'        => 'nullable|boolean',
+                'publish_at'       => 'nullable|date',
+                'meta_title'       => 'nullable|string|max:160',
+                'meta_description' => 'nullable|string',
             ]);
 
             // Wrap string HTML in an associative array to satisfy JSON column constraints
@@ -208,7 +224,17 @@ class BlogController extends Controller
             if (array_key_exists('faqs', $validated)) {
                 $validated['faqs'] = $validated['faqs'] ? ['html' => $validated['faqs']] : null;
             }
-            
+
+            // Decode schema_markup JSON string into array (stored as JSON column)
+            if (array_key_exists('schema_markup', $validated)) {
+                if (!empty($validated['schema_markup'])) {
+                    $decoded = json_decode($validated['schema_markup'], true);
+                    $validated['schema_markup'] = is_array($decoded) ? $decoded : ['raw' => $validated['schema_markup']];
+                } else {
+                    $validated['schema_markup'] = null;
+                }
+            }
+
             if ($request->has('is_active')) {
                 $validated['is_active'] = (bool) $request->is_active;
             }
