@@ -13,45 +13,40 @@ class BlogController extends Controller
     {
         try {
             $query = Blog::with('company')->latest();
+            if ($request->is('api/*')) {
 
-            // ── Public API: only active + published ──
-            if ($request->is('api/public/blogs')) {
-                $query->where('is_active', true)
-                      ->where('publish_at', '<=', now());
+                $company = $request->attributes->get('company');
 
-                // Filter by company API key if provided
-                $companyApiKey = $request->header('Company-Api-Key') ?? $request->query('company_api_key');
-                if ($companyApiKey) {
-                    $query->whereHas('company', function ($q) use ($companyApiKey) {
-                        $q->where('api_key', $companyApiKey);
-                    });
+                if (!$company) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Company authentication required.'
+                    ], 401);
                 }
 
-                $blogs = $query->get();
-                return response()->json([
-                    'success' => true, 
-                    'message' => 'Blog fetched successfully', 
-                    'data' => $blogs
-                ], 200);
-            }
+                // Only return blogs belonging to this company
+                $query->where('company_id', $company->id);
 
-            // ── Authenticated API: return all ──
-            if ($request->expectsJson() || $request->is('api/*')) {
+                if ($request->is('api/public/blogs')) {
+
+                    $query->where('is_active', true)
+                        ->where('publish_at', '<=', now());
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Blog fetched successfully',
-                    'data'    => $query->get(),
+                    'data' => $query->get(),
                 ], 200);
             }
 
-            // ── Web Admin: search + filters + pagination ──
             $companies = \App\Models\Company::orderBy('name')->get();
 
             // Search by title / subtitle
             if ($search = $request->input('search')) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('subtitle', 'like', "%{$search}%");
+                    ->orWhere('subtitle', 'like', "%{$search}%");
                 });
             }
 
@@ -62,24 +57,40 @@ class BlogController extends Controller
 
             // Filter by status
             $status = $request->input('status');
+
             if ($status === 'active') {
+
                 $query->where('is_active', true);
+
             } elseif ($status === 'inactive') {
+
                 $query->where('is_active', false);
+
             } elseif ($status === 'published') {
-                $query->where('is_active', true)->where('publish_at', '<=', now());
+
+                $query->where('is_active', true)
+                    ->where('publish_at', '<=', now());
+
             } elseif ($status === 'scheduled') {
-                $query->where('is_active', true)->where('publish_at', '>', now());
+
+                $query->where('is_active', true)
+                    ->where('publish_at', '>', now());
             }
-
             $blogs = $query->paginate(10)->withQueryString();
-
             return view('admin.blogs.index', compact('blogs', 'companies'));
         } catch (\Exception $e) {
+
             if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Failed to fetch blogs', 'error' => $e->getMessage()], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch blogs',
+                    'error' => $e->getMessage()
+                ], 500);
             }
-            return back()->with('error', 'Failed to fetch blogs: ' . $e->getMessage());
+            return back()->with(
+                'error',
+                'Failed to fetch blogs: ' . $e->getMessage()
+            );
         }
     }
 
