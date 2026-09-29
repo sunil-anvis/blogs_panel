@@ -187,7 +187,7 @@
             <div class="form-group" style="margin-bottom:0">
                 <label class="form-label">Select Date</label>
                 <input type="date" id="modal-publish-input" class="form-control">
-                <p class="text-muted text-sm mt-2">Cannot select dates older than 1 month or more than 2 months ahead.</p>
+                <p class="text-muted text-sm mt-2">Cannot select dates more than 2 months ahead.</p>
             </div>
         </div>
         <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px;">
@@ -291,9 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hiddenInput = document.getElementById('publish_at');
     if (!modalInput) return;
     const now = new Date();
-    const min = new Date(); min.setMonth(now.getMonth() - 1);
     const max = new Date(); max.setMonth(now.getMonth() + 2);
-    modalInput.min = min.toISOString().slice(0, 10);
     modalInput.max = max.toISOString().slice(0, 10);
     if (hiddenInput && hiddenInput.value) modalInput.value = hiddenInput.value;
 });

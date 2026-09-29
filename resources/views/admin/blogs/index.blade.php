@@ -241,7 +241,7 @@
             <div class="form-group" style="margin-bottom:0">
                 <label class="form-label">Select Date</label>
                 <input type="date" id="modal-publish-date" class="form-control">
-                <p class="text-muted text-sm mt-2">Cannot select dates older than 1 month or more than 2 months ahead.</p>
+                <p class="text-muted text-sm mt-2">Cannot select dates more than 2 months ahead.</p>
             </div>
             <input type="hidden" id="modal-blog-id">
         </div>
@@ -336,14 +336,10 @@
     function getValidationLimits() {
         const now = new Date();
         
-        const minDate = new Date();
-        minDate.setMonth(now.getMonth() - 1);
-        
         const maxDate = new Date();
         maxDate.setMonth(now.getMonth() + 2);
 
         return {
-            min: minDate.toISOString().slice(0, 10),
             max: maxDate.toISOString().slice(0, 10)
         };
     }
@@ -354,7 +350,6 @@
         const input = document.getElementById('modal-publish-date');
         const limits = getValidationLimits();
         
-        input.min = limits.min;
         input.max = limits.max;
         
         document.getElementById('modal-blog-id').value = blogId;
