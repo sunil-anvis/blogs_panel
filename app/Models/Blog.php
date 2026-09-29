@@ -105,7 +105,7 @@ class Blog extends Model
 
         // Strip prefix → /storage/blogs/filename.jpg
         $diskPath = ltrim(str_replace('public_storage/', '', $this->image), '/');
-        return rtrim(config('app.url'), '/') . '/storage/' . $diskPath;
+        return rtrim(config('app.url'), '/') . '/public_storage/' . $diskPath;
     }
 
     public function company()
